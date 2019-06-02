@@ -3,6 +3,7 @@ const postcss = require('gulp-postcss');
 const autoprefixer = require('autoprefixer');
 const simpleVars = require('postcss-simple-vars');
 const nested = require('postcss-nested');
+const cssImport = require('postcss-import');
 
 
 function taskHTML(done){
@@ -13,7 +14,7 @@ function taskHTML(done){
 function taskStyles(done){
     console.log('Starting styles task');
     return gulp.src('./app/assets/styles/styles.css')
-    .pipe(postcss([autoprefixer, simpleVars, nested]))
+    .pipe(postcss([cssImport, autoprefixer, simpleVars, nested]))
     .pipe(gulp.dest('./app/temp/styles'));
     done();
 }
