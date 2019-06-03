@@ -4,10 +4,12 @@ const autoprefixer = require('autoprefixer');
 const simpleVars = require('postcss-simple-vars');
 const nested = require('postcss-nested');
 const cssImport = require('postcss-import');
+const browserSync = require('browser-sync').create();
 
 
 function taskHTML(done){
     console.log('Starting HTML task');
+    browserSync.reload();
     done();
 }
 
@@ -19,10 +21,25 @@ function taskStyles(done){
     done();
 }
 
+function cssInject(done){
+    console.log('CSS file modified');
+    gulp.src('./app/temp/styles/styles.css')
+    .pipe(browserSync.stream());
+    done();
+}
+
 function watch(done){
     console.log('Starting watch');
+
+    browserSync.init({
+        notify: false,
+        server: {
+            baseDir: 'app'
+        }
+    });
+
     gulp.watch('./app/index.html', taskHTML);
-    gulp.watch('./app/assets/styles/**/*.css', taskStyles);
+    gulp.watch('./app/assets/styles/**/*.css', gulp.series(taskStyles, cssInject));
     done();
 }
 
