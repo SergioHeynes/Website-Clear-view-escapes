@@ -6,6 +6,7 @@ const nested = require('postcss-nested');
 const cssImport = require('postcss-import');
 const browserSync = require('browser-sync').create();
 const mixins = require('postcss-mixins');
+const hexrgba = require('postcss-hexrgba'); 
 
 
 function taskHTML(done){
@@ -17,7 +18,7 @@ function taskHTML(done){
 function taskStyles(done){
     console.log('Starting styles task');
     return gulp.src('./app/assets/styles/styles.css')
-    .pipe(postcss([cssImport, mixins, autoprefixer, simpleVars, nested]))
+    .pipe(postcss([cssImport, mixins, simpleVars, nested, hexrgba, autoprefixer]))
     .on('error', function(errorInfo){
         console.log(errorInfo.toString());
         this.emit('end');
