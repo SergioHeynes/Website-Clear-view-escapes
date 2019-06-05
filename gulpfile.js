@@ -6,7 +6,8 @@ const nested = require('postcss-nested');
 const cssImport = require('postcss-import');
 const browserSync = require('browser-sync').create();
 const mixins = require('postcss-mixins');
-const hexrgba = require('postcss-hexrgba'); 
+const hexrgba = require('postcss-hexrgba');
+const webpack = require('webpack'); 
 
 
 function taskHTML(done){
@@ -34,6 +35,23 @@ function cssInject(done){
     done();
 }
 
+function scripts(done){
+    console.log('Starting scripts task');
+    webpack(require('./webpack.config.js'), function(err, stats){
+        if(err){
+            console.log(err.toString());
+        }
+        console.log('Webpack done!');
+        console.log(stats.toString());
+    });
+    done();
+}
+
+function refreshScripts(done){
+    browserSync.reload();
+    done();
+}
+
 function watch(done){
     console.log('Starting watch');
 
@@ -46,11 +64,16 @@ function watch(done){
 
     gulp.watch('./app/index.html', taskHTML);
     gulp.watch('./app/assets/styles/**/*.css', gulp.series(taskStyles, cssInject));
+    gulp.watch('./app/assets/scripts/**/*.js', gulp.series(scripts, refreshScripts));
     done();
 }
+
+
+
 
 
 
 exports.taskHTML = taskHTML;
 exports.taskStyles = taskStyles;
 exports.watch = watch;
+exports.scripts = scripts;
