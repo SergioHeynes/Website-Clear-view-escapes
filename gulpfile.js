@@ -7,8 +7,27 @@ const cssImport = require('postcss-import');
 const browserSync = require('browser-sync').create();
 const mixins = require('postcss-mixins');
 const hexrgba = require('postcss-hexrgba');
-const webpack = require('webpack'); 
+const webpack = require('webpack');
+const imagemin = require('gulp-imagemin');
+const del = require('del');
+const usemin = require('gulp-usemin');
+const rev = require('gulp-rev');
+const cssnano = require('gulp-cssnano');
+const uglify = require('gulp-uglify');
 
+
+function previewDist() {
+    browserSync.init({
+        notify: false,
+        server: {
+            baseDir: 'docs'
+        }
+    });
+}
+
+function deleteDistFolder(){
+    return del('./docs');
+}
 
 function taskHTML(done){
     console.log('Starting HTML task');
@@ -68,12 +87,30 @@ function watch(done){
     done();
 }
 
+function optimizeImages() {
+    return gulp.src(['./app/assets/images/**/*'])
+    .pipe(imagemin({
+        progressive: true,
+        interlaced: true,
+        multipass: true
+    }))
+    .pipe(gulp.dest('./docs/assets/images'));
+}
 
+function useminTask() {
+    return gulp.src('./app/index.html')
+    .pipe(usemin({
+        css: [function() {return rev()}, function() {return cssnano()}],
+        js: [function() {return rev()}, function() {return uglify()}]
+    }))
+    .pipe(gulp.dest('./docs'));
+}
 
-
-
+const build = gulp.series(deleteDistFolder, gulp.parallel(gulp.series(gulp.parallel(taskStyles, scripts), useminTask), optimizeImages));
 
 exports.taskHTML = taskHTML;
 exports.taskStyles = taskStyles;
 exports.watch = watch;
 exports.scripts = scripts;
+exports.build = build;
+exports.previewDist = previewDist;
