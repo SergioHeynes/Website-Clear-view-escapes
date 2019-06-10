@@ -1,40 +1,32 @@
-const gulp = require('gulp');
-const postcss = require('gulp-postcss');
-const autoprefixer = require('autoprefixer');
-const simpleVars = require('postcss-simple-vars');
-const nested = require('postcss-nested');
-const cssImport = require('postcss-import');
-const browserSync = require('browser-sync').create();
-const mixins = require('postcss-mixins');
-const hexrgba = require('postcss-hexrgba');
-const webpack = require('webpack');
-const imagemin = require('gulp-imagemin');
-const del = require('del');
-const usemin = require('gulp-usemin');
-const rev = require('gulp-rev');
-const cssnano = require('gulp-cssnano');
-const uglify = require('gulp-uglify');
+const gulp = require('gulp'),
+postcss = require('gulp-postcss'), 
+autoprefixer = require('autoprefixer'), 
+simpleVars = require('postcss-simple-vars'), 
+nested = require('postcss-nested'), 
+cssImport = require('postcss-import'), 
+browserSync = require('browser-sync').create(), 
+mixins = require('postcss-mixins'), 
+hexrgba = require('postcss-hexrgba'), 
+webpack = require('webpack'), 
+imagemin = require('gulp-imagemin'), 
+del = require('del'), 
+usemin = require('gulp-usemin'), 
+rev = require('gulp-rev'), 
+cssnano = require('gulp-cssnano'), 
+uglify = require('gulp-uglify');
 
-
-function previewDist() {
-    browserSync.init({
-        notify: false,
-        server: {
-            baseDir: 'docs'
-        }
-    });
-}
-
-function deleteDistFolder(){
-    return del('./docs');
-}
-
+/*----------------------------------------------------
+Html
+----------------------------------------------------*/
 function taskHTML(done){
     console.log('Starting HTML task');
     browserSync.reload();
     done();
 }
 
+/*----------------------------------------------------
+Styles
+----------------------------------------------------*/
 function taskStyles(done){
     console.log('Starting styles task');
     return gulp.src('./app/assets/styles/styles.css')
@@ -43,17 +35,14 @@ function taskStyles(done){
         console.log(errorInfo.toString());
         this.emit('end');
     })
+    .pipe(browserSync.stream())
     .pipe(gulp.dest('./app/temp/styles'));
     done();
 }
 
-function cssInject(done){
-    console.log('CSS file modified');
-    gulp.src('./app/temp/styles/styles.css')
-    .pipe(browserSync.stream());
-    done();
-}
-
+/*----------------------------------------------------
+Scripts
+----------------------------------------------------*/
 function scripts(done){
     console.log('Starting scripts task');
     webpack(require('./webpack.config.js'), function(err, stats){
@@ -66,11 +55,9 @@ function scripts(done){
     done();
 }
 
-function refreshScripts(done){
-    browserSync.reload();
-    done();
-}
-
+/*----------------------------------------------------
+Watch
+----------------------------------------------------*/
 function watch(done){
     console.log('Starting watch');
 
@@ -81,12 +68,15 @@ function watch(done){
         }
     });
 
-    gulp.watch('./app/index.html', taskHTML);
-    gulp.watch('./app/assets/styles/**/*.css', gulp.series(taskStyles, cssInject));
-    gulp.watch('./app/assets/scripts/**/*.js', gulp.series(scripts, refreshScripts));
-    done();
+    gulp.watch('./app/assets/scripts/**/*.js').on('change', browserSync.reload);
+    gulp.watch('./app/assets/styles/**/*.css', taskStyles);
+    gulp.watch('./app/*.html').on('change', browserSync.reload);
 }
+    
 
+/*----------------------------------------------------
+Images
+----------------------------------------------------*/
 function optimizeImages() {
     return gulp.src(['./app/assets/images/**/*'])
     .pipe(imagemin({
@@ -97,6 +87,10 @@ function optimizeImages() {
     .pipe(gulp.dest('./docs/assets/images'));
 }
 
+
+/*----------------------------------------------------
+Preparing files for go live
+----------------------------------------------------*/
 function useminTask() {
     return gulp.src('./app/index.html')
     .pipe(usemin({
@@ -106,11 +100,33 @@ function useminTask() {
     .pipe(gulp.dest('./docs'));
 }
 
-const build = gulp.series(deleteDistFolder, gulp.parallel(gulp.series(gulp.parallel(taskStyles, scripts), useminTask), optimizeImages));
+/*----------------------------------------------------
+Preview of the project from dist/docs folder
+----------------------------------------------------*/
+function previewDist() {
+    browserSync.init({
+        notify: false,
+        server: {
+            baseDir: 'docs'
+        }
+    });
+}
 
-exports.taskHTML = taskHTML;
-exports.taskStyles = taskStyles;
+/*----------------------------------------------------
+Delete dist folder
+----------------------------------------------------*/
+function deleteDistFolder(){
+    return del('./docs');
+}
+
+/*----------------------------------------------------
+Build
+----------------------------------------------------*/
+const build = gulp.series(deleteDistFolder, gulp.parallel(gulp.series(gulp.series(taskStyles, scripts), useminTask), optimizeImages));
+
+/*----------------------------------------------------
+Exports
+----------------------------------------------------*/
 exports.watch = watch;
-exports.scripts = scripts;
 exports.build = build;
 exports.previewDist = previewDist;
