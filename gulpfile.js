@@ -122,7 +122,7 @@ function deleteDistFolder(){
 /*----------------------------------------------------
 Build
 ----------------------------------------------------*/
-const build = gulp.series(deleteDistFolder, gulp.parallel(gulp.series(gulp.series(taskStyles, scripts), useminTask), optimizeImages));
+const build = gulp.series(deleteDistFolder, taskStyles, scripts, useminTask, optimizeImages);
 
 /*----------------------------------------------------
 Exports
